@@ -5,7 +5,7 @@ from src.models.resnet import resnet18
 class ImageStateObservation(nn.Module):
     """ A simple module that passes the observed image through resnet and combines the feature vector with states
         The module can also be used as resnet encoder alone without using the observation.states by setting use_states = False.
-        The module can combine image with state via simple concatenation.
+        The module can combine image with state via simple concatenation and MLP modules.
     """
     
     def __init__(self, use_states=True, dropout=0.1):
