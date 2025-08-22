@@ -26,11 +26,11 @@ training:
   betas: [0.9, 0.999]
   gamma: 1
   eval_interval: 1 # is also the save interval
-  checkpoint_path: "/content/drive/MyDrive/BeT2/checkpoint_combined"
+  checkpoint_path: "/content/BeT-PushT/checkpoint"
 
 evaluation:
   save_video: True
   video_dir: "/content/drive/MyDrive/BeT2/eval_videos"
   num_rollout: 100
   max_episode_steps: 300
-  checkpoint_path: "/content/drive/MyDrive/BeT2/checkpoint_combined/checkpoint_epoch12.pth"
+  checkpoint_path: "/content/BeT-PushT/checkpoint/checkpoint_epoch0.pth"
