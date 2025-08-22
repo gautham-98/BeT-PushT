@@ -75,7 +75,7 @@ The evaluation settings such as maximum steps per rollout and the number of roll
 
 1. Hyperparameter tuning for better results.
 2. Ablation study with only image as input compared to image and object position as input.
-3. Cross-attention instead of simple concatenation between both input modalities to create input observation vector.
+3. Cross-attention instead of simple concatenation between both input modalities to create input observation vector. The robot position can be used as a query and the image features can be used as keys. 
 4. Train the model for real-world settings for tasks such as object sorting etc.
 
 
