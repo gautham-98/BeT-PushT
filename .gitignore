@@ -1,0 +1,17 @@
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Virtual environment
+*.bet-env
+
+# Checkpoints
+checkpoints/
+
+# Logs and evaluation outputs
+eval_videos/
+wandb/
+
+# System files
+.DS_Store

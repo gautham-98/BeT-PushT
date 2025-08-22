@@ -1,0 +1,36 @@
+device: cuda
+
+data:
+  batch_size: 512
+  sequence_length: 10
+  num_workers: 2
+
+observation:
+  observation_dim: 80 # 80 if using states else 512
+  embedding_dim: 128 
+  use_states: True
+
+action:
+  num_bins: 4
+  action_dim: 2
+
+bet_model:
+  num_transformer_layers: 8
+  num_attention_heads: 4
+
+training:
+  epochs: 500
+  residual_loss_scale: 0.001
+  learning_rate: 0.0001
+  weight_decay: 0.02
+  betas: [0.9, 0.999]
+  gamma: 1
+  eval_interval: 1 # is also the save interval
+  checkpoint_path: "/content/drive/MyDrive/BeT2/checkpoint_combined"
+
+evaluation:
+  save_video: True
+  video_dir: "/content/drive/MyDrive/BeT2/eval_videos"
+  num_rollout: 100
+  max_episode_steps: 300
+  checkpoint_path: "/content/drive/MyDrive/BeT2/checkpoint_combined/checkpoint_epoch12.pth"
