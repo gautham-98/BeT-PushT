@@ -30,7 +30,7 @@ training:
 
 evaluation:
   save_video: True
-  video_dir: "/content/drive/MyDrive/BeT2/eval_videos"
+  video_dir: "/content/BeT-PushT/eval_videos"
   num_rollout: 100
   max_episode_steps: 300
-  checkpoint_path: "/content/BeT-PushT/checkpoint/checkpoint_epoch0.pth"
+  checkpoint_path: "/content/checkpoint_epoch21.pth"
