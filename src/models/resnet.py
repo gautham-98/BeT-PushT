@@ -18,7 +18,7 @@ class resnet18(nn.Module):
         self.pretrained = pretrained
         self.freeze_pretrained = pretrained and freeze_pretrained
         if self.freeze_pretrained:
-            utils.freeze_module(self.resnet)
+            self.resnet = utils.freeze_module(self.resnet)
         self.normalize = torchvision.transforms.Normalize(
             mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
         )
@@ -36,3 +36,5 @@ class resnet18(nn.Module):
         if is_seq:
             out = rearrange(out, "(n t) e -> n t e", n=n, t=t)
         return out
+
+    

@@ -5,7 +5,6 @@ from src.models.observations import ImageStateObservation
 from src.models.bet import BeT
 from src.data.dataloader import get_dataloaders
 from src.training.trainer import Trainer
-import src.utils as utils
 
 def load_config(path="config.yaml"):
     path = Path(path)
@@ -22,17 +21,20 @@ def init_data(config):
     return trainloader, valloader
 
 def init_models(config, trainloader=None, device=None):
+    """if trainloader is provided the action collection will be extracted from it for BeT initialization and the model is set to training mode."""
+    
     device = device or config["device"]
     
     # Observation encoder
     obs_conf = config["observation"]
-    observation_module = ImageStateObservation(use_states=obs_conf["use_states"]).to(device)
+    observation_module = ImageStateObservation(use_states=obs_conf["use_states"], fusion_type=obs_conf["fusion_type"]).to(device)
     
     # Action collection (needed by BeT)
     if trainloader is not None:
         action_collection = torch.stack(trainloader.dataset.hf_dataset['action'], dim=0)
     else: # load a dummy, the bin centroids can later be loaded from the checkpoint file
-        action_collection = torch.rand(size=(10000,2))
+        action_collection = None
+    
     # BeT model
     bet_conf = config["bet_model"]
     action_conf = config["action"]
@@ -49,6 +51,7 @@ def init_models(config, trainloader=None, device=None):
         actions=action_collection,
         device=device
     ).to(device)
+
     return observation_module, bet
 
 def init_trainer(config, observation_module, bet, trainloader, valloader):
@@ -68,3 +71,4 @@ def init_trainer(config, observation_module, bet, trainloader, valloader):
         ckpt_dir=train_conf["checkpoint_path"]
     )
     return trainer
+

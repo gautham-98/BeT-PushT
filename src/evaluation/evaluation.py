@@ -9,6 +9,7 @@ import torch
 
 from src.utils.config_utils import load_config, init_models
 from src.utils import load_models_from_checkpoint
+from src.utils.data_utils import Normalise
 
 
 def evaluate_policy(config):
@@ -23,6 +24,9 @@ def evaluate_policy(config):
     )
     observation_module.eval()
     bet.eval()
+
+    # set normalise stats
+    Normalise.set_stats_from_file()
 
     # env
     env = gym.make(
@@ -41,11 +45,12 @@ def evaluate_policy(config):
 
         obs, info = env.reset(seed=42 + run_id)
         done, step = False, 0
-        frames.append(env.render())
+        # frames.append(env.render())
 
         while not done:
             # extract state + image from env observation
-            state = torch.tensor(obs["agent_pos"], dtype=torch.float32).unsqueeze(0).to(config["device"])
+            observation_state = Normalise.forward(obs["agent_pos"], "observation.state")
+            state = torch.tensor(observation_state, dtype=torch.float32).unsqueeze(0).to(config["device"])
             image = torch.tensor(obs["pixels"], dtype=torch.float32).permute(2, 0, 1).unsqueeze(0) / 255.0
             image = image.to(config["device"])
 
@@ -70,9 +75,11 @@ def evaluate_policy(config):
 
                 numpy_action = action.squeeze(0).cpu().numpy()
             else:
-                # warmup: zero action
-                numpy_action = np.zeros(env.action_space.shape, dtype=np.float32)
+                # warmup: intial state
+                numpy_action = state.squeeze(0).cpu().numpy() 
 
+            numpy_action = Normalise.inverse(numpy_action, "action")
+            
             # step env
             obs, reward, terminated, truncated, info = env.step(numpy_action)
             rewards.append(reward)

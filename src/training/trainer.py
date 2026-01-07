@@ -122,7 +122,7 @@ class Trainer:
         # fuse image with state
         observations_history = self.observation_module(observations_images_history.to(self.bet.device), observation_states_history.to(self.bet.device))
         # get the predicted logits and residuals for the observation
-        preds = self.bet(observations_history, train_data=True)
+        preds = self.bet(observations_history)
         predicted_seq_action_bins_logits, predicted_seq_action_residuals = preds["seq_action_bins_logits"], preds["seq_action_residuals"]
         
         # loss
@@ -184,7 +184,7 @@ if __name__ == "__main__":
     num_attention_heads = 1
 
     # init models
-    observation_module = ImageStateObservation(use_cross_attention=False, use_states=True).to(DEVICE)
+    observation_module = ImageStateObservation(use_states=True).to(DEVICE)
     bet = BeT(observation_dim, embedding_dim, num_transformer_layers, num_attention_heads, action_dim, num_bins, sequence_length, action_collection, device=DEVICE)
     
     # training
