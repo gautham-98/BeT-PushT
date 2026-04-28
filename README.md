@@ -54,28 +54,6 @@ For experiments I have relied on Google Colab for GPUs and the `requirements.txt
 
 The main design choice was **multi-modal processing**: using ResNet for images, MLP for robot states, and combining them before passing into the Behaviour Transformer. The robot MLP upscales the 2 dimensional state to 16 dimensional tensor, the MLP after Resnet downscale the 512-dimensional feature embedding from ResNet as a 64-dimensional tensor. These are then concatenated to create a 80 dimensional observation tensor which is then passed to the BeT model. The action output is the target robot position. This is implemented in the class `ImageStateObservation` in `BeT-PushT/src/models/observations.py`. The class can also be configured to just use the observation image and avoid using the robot position. 
 
-**Challenges faced**: hyperparameter optimization which requires multiple runs was difficult due to limited GPU availability on Google Colab. Current results are limited to failure videos.
-
-## Results
-<div align="center">
-  <img src="figures/pusht_results_1.gif" alt="BeT-PushT Dataset" width="200"/>
-</div>
-
-At this stage, we only have qualitative results showing failed attempts. No quantitative metrics have been obtained yet, although the evaluation script is complete and available at `BeT-PushT/src/evaluation/evaluation.py`. These failure videos are still useful for debugging and understanding model behavior.
-
-Rollout settings were programmed in `gym_pusht` environment. The following metrics has been setup in the rollouts for evaluating the policy - 
-
-1. Success rate - The number of times policy was able to achieve an overlap of 95% of the T-block with the target region in 100 runs expressed as a percentage.
-2. Average maximum overlap - The maximum overlap achieved in every rollout is measured and averaged across all the 100 runs. 
-
-The evaluation settings such as maximum steps per rollout and the number of rollout runs can be configured from `config.yaml`.
-
-## Future Improvements and Scaling
-
-1. Hyperparameter tuning for better results.
-2. Ablation study with only image as input compared to image and object position as input.
-3. Cross-attention instead of simple concatenation between both input modalities to create input observation vector. The robot position can be used as a query and the image features can be used as keys. 
-4. Train the model for real-world settings for tasks such as object sorting etc.
 
 
 
