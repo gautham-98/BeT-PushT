@@ -2,7 +2,6 @@
 ## Contents
 - [Introduction](#introduction)
 - [Design Choices and Challenges](#design-choices-and-challenges)
-- [Future Improvements and Scaling](#future-improvements-and-scaling)
 
 ## Introduction
 
