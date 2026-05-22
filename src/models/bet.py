@@ -77,7 +77,7 @@ class BeT(nn.Module):
                 "seq_action_residuals": seq_action_residuals,
             }
 
-    def create_optimizer(self, weight_decay, learning_rate, betas):
+    def create_optimizer(self, learning_rate, weight_decay, betas):
         optimizer = self.gpt.configure_optimizers(
             weight_decay=weight_decay,
             learning_rate=learning_rate,

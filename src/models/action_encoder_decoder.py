@@ -1,7 +1,9 @@
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 import torch
 import torch.nn as nn
 from sklearn.cluster import KMeans
-import matplotlib.pyplot as plt
 
 class EncoderDecoder(nn.Module):
     def __init__(self, action_dim, num_bins, actions=None, device="cuda"):

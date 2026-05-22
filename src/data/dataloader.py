@@ -35,7 +35,7 @@ def _make_subset_dataset(repo_id, episodes, delta_timestamps, augment=None):
     This is necessary because we have to remap the global episode idx (referred with full dataset)
     to local episode idx referring to subset dataset.
     """
-    ds = LeRobotDataset(repo_id, delta_timestamps=delta_timestamps, episodes=episodes, image_transforms=augment)
+    ds = LeRobotDataset(repo_id, delta_timestamps=delta_timestamps, episodes=episodes, image_transforms=augment, video_backend="pyav")
     
     # normalise coords
     ds.hf_dataset.set_transform(normalise_coords)

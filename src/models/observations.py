@@ -1,6 +1,7 @@
 from typing_extensions import Literal
 import torch.nn as nn
 import torch
+import torchvision.transforms as T
 from src.models.resnet import resnet18
 
 
@@ -72,10 +73,12 @@ class ImageStateObservation(nn.Module):
                         nn.GELU(),
                     )
                     
-                    resnet = resnet18().resnet[:-1] 
+                    resnet = resnet18().resnet[:-1]
+                    normalize = T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 
                     self.image_projection = nn.Sequential(
-                        resnet, 
+                        normalize,
+                        resnet,
                         nn.Conv2d(512, 128, kernel_size=3, padding=1),
                         nn.GELU(),
                         nn.Dropout(dropout),
