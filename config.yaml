@@ -1,7 +1,7 @@
 device: cuda
 
 data:
-  batch_size: 32
+  batch_size: 64
   sequence_length: 50
   num_workers: 2
 
