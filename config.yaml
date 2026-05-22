@@ -12,7 +12,7 @@ observation:
   fusion_type: "concat"
 
 action:
-  num_bins: 32
+  num_bins: 8
   action_dim: 2
 
 bet_model:
