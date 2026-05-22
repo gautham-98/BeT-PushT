@@ -6,18 +6,18 @@ data:
   num_workers: 2
 
 observation:
-  observation_dim: 64 # 40 if using states else 32
+  observation_dim: 40 # 40 if using states else 32
   embedding_dim: 128
   use_states: True
-  fusion_type: "cross_attention"
+  fusion_type: "concat"
 
 action:
   num_bins: 32
   action_dim: 2
 
 bet_model:
-  num_transformer_layers: 8
-  num_attention_heads: 4
+  num_transformer_layers: 4
+  num_attention_heads: 2
 
 training:
   epochs: 500
