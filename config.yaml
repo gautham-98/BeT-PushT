@@ -1,4 +1,4 @@
-device: cuda
+device: gpu
 
 data:
   batch_size: 64
@@ -20,12 +20,12 @@ bet_model:
   num_attention_heads: 2
 
 training:
-  epochs: 500
+  epochs: 100
   residual_loss_scale: 5
   learning_rate: 0.0001
   weight_decay: 0.02
   betas: [0.9, 0.999]
-  gamma: 1
+  gamma: 2
   eval_interval: 1 # is also the save interval
   checkpoint_path: "./checkpoint"
 
@@ -34,4 +34,4 @@ evaluation:
   video_dir: "./eval_videos"
   num_rollout: 100
   max_episode_steps: 300
-  checkpoint_path: "/home/zogmohan/GIT_1/BeT-PushT/checkpoint/checkpoint_epoch0.pth"
+  checkpoint_path: "./checkpoint/checkpoint_epoch3.pth"
