@@ -12,7 +12,7 @@ observation:
   fusion_type: "concat"
 
 action:
-  num_bins: 8
+  num_bins: 16
   action_dim: 2
 
 bet_model:
@@ -20,10 +20,10 @@ bet_model:
   num_attention_heads: 2
 
 training:
-  epochs: 100
+  epochs: 15
   residual_loss_scale: 5
   learning_rate: 0.0001
-  weight_decay: 0.02
+  weight_decay: 0.01
   betas: [0.9, 0.999]
   gamma: 2
   eval_interval: 1 # is also the save interval
@@ -34,4 +34,4 @@ evaluation:
   video_dir: "./eval_videos"
   num_rollout: 100
   max_episode_steps: 300
-  checkpoint_path: "./checkpoint/checkpoint_epoch3.pth"
+  checkpoint_path: "./checkpoint/checkpoint_epoch15.pth"

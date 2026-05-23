@@ -20,9 +20,9 @@ logger = logging.getLogger(__name__)
 class GPTConfig:
     """base GPT config, params common to all GPT versions"""
 
-    embd_pdrop = 0.2
-    resid_pdrop = 0.2
-    attn_pdrop = 0.2
+    embd_pdrop = 0.3
+    resid_pdrop = 0.3
+    attn_pdrop = 0.3
     discrete_input = False
     input_size = 10
     n_embd = 768
