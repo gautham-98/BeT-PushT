@@ -77,6 +77,7 @@ class BeT(nn.Module):
             return {
                 "seq_action_bins_logits": seq_action_bins_logits,
                 "seq_action_residuals": seq_action_residuals,
+                "selected_seq_action_residuals": selected_seq_action_residuals,
             }
 
     def create_optimizer(self, learning_rate, weight_decay, betas):

@@ -7,7 +7,7 @@ import wandb
 
 from src.models.bet import BeT
 from src.models.observations import ImageStateObservation
-from src.training.losses import FocalLoss, MultiTaskLoss
+from src.training.losses import FocalLoss
 
 class Trainer:
     
@@ -34,7 +34,7 @@ class Trainer:
             self.epochs = epochs
             self.optimizer = self.get_optimizer(learning_rate, weight_decay, betas)
             self.focal_loss = FocalLoss(gamma)
-            self.mt_loss = MultiTaskLoss() 
+            self.mse = nn.MSELoss()
             self.residual_loss_scale = residual_loss_scale
             
             self.eval_interval = eval_interval
@@ -123,17 +123,17 @@ class Trainer:
         observations_history = self.observation_module(observations_images_history.to(self.bet.device), observation_states_history.to(self.bet.device))
         # get the predicted logits and residuals for the observation
         preds = self.bet(observations_history)
-        predicted_seq_action_bins_logits, predicted_seq_action_residuals = preds["seq_action_bins_logits"], preds["seq_action_residuals"]
-        
+        predicted_seq_action_bins_logits = preds["seq_action_bins_logits"]
+        selected_seq_action_residuals = preds["selected_seq_action_residuals"]
+
         # loss
         ## bin losses
         predicted_seq_action_bins_logits = predicted_seq_action_bins_logits.reshape((-1, predicted_seq_action_bins_logits.shape[-1]))
         target_seq_action_bins = target_seq_action_bins.reshape((-1,1))
         action_bins_loss = self.focal_loss(predicted_seq_action_bins_logits, target_seq_action_bins)
-        
-        ## residual losses
-        predicted_seq_action_residuals = predicted_seq_action_residuals.reshape(-1, predicted_seq_action_residuals.shape[-2], predicted_seq_action_residuals.shape[-1]) #B*T,BINS,ACTION_DIM
-        action_residual_loss = self.mt_loss(predicted_seq_action_residuals, target_seq_action_bins, target_seq_action_residuals)
+
+        ## residual loss: sampled bin's residual vs GT residual
+        action_residual_loss = self.mse(selected_seq_action_residuals, target_seq_action_residuals)
         
         ## total loss
         loss = action_bins_loss + action_residual_loss * self.residual_loss_scale
