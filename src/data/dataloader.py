@@ -91,12 +91,14 @@ def get_dataloaders(
         num_workers=num_workers,
         batch_size=batch_size,
         shuffle=True,
+        pin_memory=True,
     )
     val_dataloader = torch.utils.data.DataLoader(
         val_dataset,
         num_workers=num_workers,
         batch_size=batch_size,
         shuffle=False,
+        pin_memory=True,
     )
     return train_dataloader, val_dataloader
 
