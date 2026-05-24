@@ -13,7 +13,7 @@ observation:
   encoder_type: "cnn" # "resnet" or "cnn"
 
 action:
-  num_bins: 8
+  num_bins: 24
   action_dim: 2
 
 bet_model:
