@@ -1,9 +1,9 @@
-device: cpu
+device: cuda
 
 data:
-  batch_size: 64
-  sequence_length: 50
-  num_workers: 2
+  batch_size: 256
+  sequence_length: 5
+  num_workers: 8
 
 observation:
   observation_dim: 40 # 40 if using states else 32
@@ -19,14 +19,15 @@ action:
 bet_model:
   num_transformer_layers: 4
   num_attention_heads: 2
+  dropout: 0.1
 
 training:
-  epochs: 15
-  residual_loss_scale: 5
+  epochs: 30
+  residual_loss_scale: 1
   learning_rate: 0.0001
   weight_decay: 0.01
-  betas: [0.9, 0.999]
-  gamma: 2
+  betas: [0.9, 0.95]
+  gamma: 1
   eval_interval: 1 # is also the save interval
   checkpoint_path: "./checkpoint"
 
