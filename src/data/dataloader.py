@@ -92,6 +92,8 @@ def get_dataloaders(
         batch_size=batch_size,
         shuffle=True,
         pin_memory=True,
+        prefetch_factor=4 if num_workers > 0 else None,
+        persistent_workers=True if num_workers > 0 else False,
     )
     val_dataloader = torch.utils.data.DataLoader(
         val_dataset,
@@ -99,6 +101,8 @@ def get_dataloaders(
         batch_size=batch_size,
         shuffle=False,
         pin_memory=True,
+        prefetch_factor=4 if num_workers > 0 else None,
+        persistent_workers=True if num_workers > 0 else False,
     )
     return train_dataloader, val_dataloader
 

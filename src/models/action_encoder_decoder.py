@@ -115,11 +115,11 @@ class EncoderDecoder(nn.Module):
         action_flat = action.reshape(B*T, D)
 
         # Compute nearest cluster centers
-        dists = torch.cdist(action_flat.cpu(), self.centroids.cpu())
+        dists = torch.cdist(action_flat, self.centroids)
         action_bin = torch.argmin(dists, dim=1)
         action_center = self.centroids[action_bin]
 
-        action_residual = action_flat.to(self.device) - action_center.to(self.device)
+        action_residual = action_flat - action_center
         action_residual = action_residual.reshape(B, T, D)
         action_bin = action_bin.reshape(B, T, 1)
 
