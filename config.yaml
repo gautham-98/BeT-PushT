@@ -1,4 +1,4 @@
-device: cuda
+device: cpu
 
 data:
   batch_size: 64
@@ -10,6 +10,7 @@ observation:
   embedding_dim: 128
   use_states: True
   fusion_type: "concat"
+  encoder_type: "cnn" # "resnet" or "cnn"
 
 action:
   num_bins: 16

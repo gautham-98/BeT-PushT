@@ -27,7 +27,7 @@ def init_models(config, trainloader=None, device=None):
     
     # Observation encoder
     obs_conf = config["observation"]
-    observation_module = ImageStateObservation(use_states=obs_conf["use_states"], fusion_type=obs_conf["fusion_type"]).to(device)
+    observation_module = ImageStateObservation(use_states=obs_conf["use_states"], fusion_type=obs_conf["fusion_type"], encoder_type=obs_conf.get("encoder_type", "resnet")).to(device)
     
     # Action collection (needed by BeT)
     if trainloader is not None:
