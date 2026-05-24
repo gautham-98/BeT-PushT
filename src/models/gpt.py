@@ -20,18 +20,18 @@ logger = logging.getLogger(__name__)
 class GPTConfig:
     """base GPT config, params common to all GPT versions"""
 
-    embd_pdrop = 0.3
-    resid_pdrop = 0.3
-    attn_pdrop = 0.3
     discrete_input = False
     input_size = 10
     n_embd = 768
     n_layer = 12
     n_head = 12
 
-    def __init__(self, vocab_size, block_size, **kwargs):
+    def __init__(self, vocab_size, block_size, dropout=0.1, **kwargs):
         self.vocab_size = vocab_size
         self.block_size = block_size
+        self.embd_pdrop = dropout
+        self.resid_pdrop = dropout
+        self.attn_pdrop = dropout
         for k, v in kwargs.items():
             setattr(self, k, v)
 

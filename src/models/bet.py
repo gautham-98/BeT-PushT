@@ -17,6 +17,7 @@ class BeT(nn.Module):
         num_bins,
         sequence_length,
         actions = None,
+        dropout = 0.1,
         device="cuda",
     ):
         super(BeT, self).__init__()
@@ -38,6 +39,7 @@ class BeT(nn.Module):
                 n_embd=embedding_dim,
                 n_layer=num_transformer_layers,
                 n_head=num_attention_heads,
+                dropout=dropout,
             )
         ).to(device)
 

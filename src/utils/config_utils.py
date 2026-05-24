@@ -49,6 +49,7 @@ def init_models(config, trainloader=None, device=None):
         num_bins=action_conf["num_bins"],
         sequence_length=data_conf["sequence_length"],
         actions=action_collection,
+        dropout=bet_conf.get("dropout", 0.1),
         device=device
     ).to(device)
 
