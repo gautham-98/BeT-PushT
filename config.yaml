@@ -6,19 +6,19 @@ data:
   num_workers: 8
 
 observation:
-  observation_dim: 40 # 40 if using states else 32
+  observation_dim: 64 # 40 if using states else 32
   embedding_dim: 128
   use_states: True
-  fusion_type: "concat"
+  fusion_type: "cross_attention"
   encoder_type: "cnn" # "resnet" or "cnn"
 
 action:
-  num_bins: 16
+  num_bins: 8
   action_dim: 2
 
 bet_model:
   num_transformer_layers: 4
-  num_attention_heads: 2
+  num_attention_heads: 4
   dropout: 0.1
 
 training:
@@ -29,11 +29,11 @@ training:
   betas: [0.9, 0.95]
   gamma: 1
   eval_interval: 1 # is also the save interval
-  checkpoint_path: "./checkpoint"
+  checkpoint_path: "./checkpoint_4_4_8_w5_cross"
 
 evaluation:
   save_video: True
-  video_dir: "./eval_videos"
+  video_dir: "./eval_videos_4_4_8_w5_cross"
   num_rollout: 100
   max_episode_steps: 300
-  checkpoint_path: "./checkpoint/checkpoint_epoch15.pth"
+  checkpoint_path: "./checkpoint_4_4_8_w5_cross/checkpoint_epoch15.pth"
