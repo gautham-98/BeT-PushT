@@ -23,7 +23,8 @@ class Trainer:
                     betas=[0.9,0.999],
                     gamma=2.0,
                     residual_loss_scale=10,
-                    eval_interval = 5,
+                    eval_interval=1,
+                    save_interval=5,
                     ckpt_dir = "./checkpoints",
                     run_name = "bet_training"
                     ):
@@ -38,6 +39,7 @@ class Trainer:
             self.residual_loss_scale = residual_loss_scale
             
             self.eval_interval = eval_interval
+            self.save_interval = save_interval
             self.ckpt_dir = ckpt_dir
             os.makedirs(self.ckpt_dir, exist_ok=True)
             
@@ -104,11 +106,11 @@ class Trainer:
                 
                 # log
                 wandb.log({"val_loss": val_loss, "val_bin_loss":val_bin_loss, "val_residual_loss":val_residual_loss, "epoch": epoch})
-                
+
                 tqdm.write(f"Epoch [{epoch+1}/{self.epochs}] | Train Loss: {train_loss:.4f} | Val Loss: {val_loss:.4f}")
 
-                # save checkpoints
-                self.save_checkpoint(epoch, val_loss)
+                if epoch % self.save_interval == 0:
+                    self.save_checkpoint(epoch, val_loss)
                 
             
     def _step(self, batch):

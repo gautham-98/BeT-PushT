@@ -69,6 +69,7 @@ def init_trainer(config, observation_module, bet, trainloader, valloader):
         gamma=train_conf["gamma"],
         residual_loss_scale=train_conf["residual_loss_scale"],
         eval_interval=train_conf["eval_interval"],
+        save_interval=train_conf["save_interval"],
         ckpt_dir=train_conf["checkpoint_path"]
     )
     return trainer

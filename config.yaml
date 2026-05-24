@@ -22,13 +22,14 @@ bet_model:
   dropout: 0.1
 
 training:
-  epochs: 30
-  residual_loss_scale: 1
+  epochs: 500
+  residual_loss_scale: 1000
   learning_rate: 0.0001
   weight_decay: 0.01
   betas: [0.9, 0.95]
   gamma: 1
-  eval_interval: 1 # is also the save interval
+  eval_interval: 1
+  save_interval: 10
   checkpoint_path: "./checkpoint_4_4_8_w5_cross"
 
 evaluation:
