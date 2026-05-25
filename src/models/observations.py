@@ -62,6 +62,24 @@ def _build_cnn_spatial(dropout):
         nn.Dropout(dropout),
     )
 
+def _build_cnn_early_fusion(dropout):
+    """CNN with (3 + 2) input: state is broadcast spatially and fused at the pixel level."""
+    return nn.Sequential(
+        nn.Conv2d(5, 32, kernel_size=3, stride=2, padding=1),  # 48x48
+        nn.GELU(),
+        nn.Conv2d(32, 64, kernel_size=3, stride=2, padding=1),     # 24x24
+        nn.GELU(),
+        nn.Conv2d(64, 128, kernel_size=3, stride=2, padding=1),    # 12x12
+        nn.GELU(),
+        nn.Conv2d(128, 128, kernel_size=3, stride=2, padding=1),   # 6x6
+        nn.GELU(),
+        nn.AdaptiveAvgPool2d(1),
+        nn.Flatten(),
+        nn.Linear(128, 32),
+        nn.GELU(),
+        nn.Dropout(dropout),
+    )
+
 
 class ImageStateObservation(nn.Module):
     """
@@ -73,9 +91,10 @@ class ImageStateObservation(nn.Module):
     def __init__(
         self,
         use_states=True,
-        fusion_type: Literal["concat", "cross_attention"] = "concat",
+        fusion_type: Literal["concat", "cross_attention", "early_fusion"] = "concat",
         encoder_type: Literal["resnet", "cnn"] = "resnet",
         dropout=0.1,
+        image_size: int = 96,
     ):
         super().__init__()
         self.use_states = use_states
@@ -143,6 +162,17 @@ class ImageStateObservation(nn.Module):
                         nn.GELU(),
                     )
 
+                case "early_fusion":
+                    if encoder_type != "cnn":
+                        raise ValueError("early_fusion only supported with encoder_type='cnn'")
+                    self.state_projection = nn.Linear(2, 2 * image_size * image_size)
+                    w = torch.zeros(2 * image_size * image_size, 2)
+                    w[:image_size * image_size, 0] = 0.5   # channel 0 ← 0.5 * state_x
+                    w[image_size * image_size:, 1] = 0.5   # channel 1 ← 0.5 * state_y
+                    self.state_projection.weight.data = w
+                    nn.init.zeros_(self.state_projection.bias)
+                    self.image_projection = _build_cnn_early_fusion(dropout)
+
                 case _:
                     raise ValueError(f"Unsupported fusion type: {fusion_type}")
 
@@ -153,14 +183,20 @@ class ImageStateObservation(nn.Module):
         if self.use_states:
             _, _, C_state = states.shape
             states = states.reshape(B * T, C_state)
-            state_embeddings = self.state_projection(states)
-            image_embeddings = self.image_projection(images)
 
-            match self.fusion_type:
-                case "cross_attention":
-                    output = self.cross_attention(state_embeddings, image_embeddings)
-                case "concat":
-                    output = torch.cat([image_embeddings, state_embeddings], dim=-1)
+            if self.fusion_type == "early_fusion":
+                state_spatial = self.state_projection(states).reshape(B * T, 2, H, W)
+                fused = torch.cat([images, state_spatial], dim=1)  # (B*T, 5, H, W)
+                output = self.image_projection(fused)
+            else:
+                state_embeddings = self.state_projection(states)
+                image_embeddings = self.image_projection(images)
+
+                match self.fusion_type:
+                    case "cross_attention":
+                        output = self.cross_attention(state_embeddings, image_embeddings)
+                    case "concat":
+                        output = torch.cat([image_embeddings, state_embeddings], dim=-1)
 
             output = output.reshape(B, T, -1)
 
