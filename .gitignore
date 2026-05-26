@@ -8,10 +8,20 @@ __pycache__/
 
 # Checkpoints
 checkpoints/
+checkpoint*/
 
 # Logs and evaluation outputs
-eval_videos/
+eval_videos*/
 wandb/
+
+# Generated outputs
+*.png
+*.stats
+normaliser.stats
+
+# IDE
+.vscode/
 
 # System files
 .DS_Store
+.env

@@ -6,14 +6,13 @@ import torch.nn as nn
 import wandb
 
 from src.models.bet import BeT
-from src.models.observations import ImageStateObservation
 from src.training.losses import FocalLoss
 
 class Trainer:
     
     def __init__(
-                    self, 
-                    observation_module: ImageStateObservation,
+                    self,
+                    observation_module: nn.Module,
                     bet:BeT, 
                     trainloader:DataLoader,
                     valloader:DataLoader, 

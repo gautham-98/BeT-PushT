@@ -4,13 +4,14 @@ data:
   batch_size: 256
   sequence_length: 5
   num_workers: 8
+  n_pts: 16
 
 observation:
-  observation_dim: 64 # 40 if using states else 32
-  embedding_dim: 128
-  use_states: True
-  fusion_type: "cross_attention"
-  encoder_type: "cnn" # "resnet" or "cnn"
+  observation_dim: 64   # output of KeypointStateObservation → input to BeT
+  embedding_dim: 128    # BeT internal embedding
+  n_pts: 16
+  state_dim: 2
+  dropout: 0.1
 
 action:
   num_bins: 24
@@ -30,11 +31,11 @@ training:
   gamma: 1
   eval_interval: 1
   save_interval: 10
-  checkpoint_path: "./checkpoint_4_4_8_w5_cross"
+  checkpoint_path: "./checkpoint_keypoint"
 
 evaluation:
   save_video: True
-  video_dir: "./eval_videos_4_4_8_w5_cross"
+  video_dir: "./eval_videos_keypoint"
   num_rollout: 100
   max_episode_steps: 300
-  checkpoint_path: "./checkpoint_4_4_8_w5_cross/checkpoint_epoch15.pth"
+  checkpoint_path: "./checkpoint_keypoint/checkpoint_epoch10.pth"
