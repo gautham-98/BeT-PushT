@@ -6,14 +6,13 @@ import torch.nn as nn
 import wandb
 
 from src.models.bet import BeT
-from src.models.observations import ImageStateObservation
 from src.training.losses import FocalLoss
 
 class Trainer:
-    
+
     def __init__(
-                    self, 
-                    observation_module: ImageStateObservation,
+                    self,
+                    observation_module: nn.Module,
                     bet:BeT, 
                     trainloader:DataLoader,
                     valloader:DataLoader, 
@@ -114,33 +113,25 @@ class Trainer:
                 
             
     def _step(self, batch):
-        # extract the inputs and outputs from batch
-        observations_images_history, observation_states_history, actions_history = batch["observation.image"].to(self.bet.device), batch["observation.state"].to(self.bet.device), batch["action"].to(self.bet.device)
-        
-        # get the target bins and residuals for each action in action history
-        target_seq_action_bins, target_seq_action_residuals = self.bet.encoderDecoder.encode(actions_history) # B,T,1; B, T, Action_dimension
-        target_seq_action_bins, target_seq_action_residuals =  target_seq_action_bins.to(self.bet.device), target_seq_action_residuals.to(self.bet.device)
-        
-        # fuse image with state
-        observations_history = self.observation_module(observations_images_history.to(self.bet.device), observation_states_history.to(self.bet.device))
-        # get the predicted logits and residuals for the observation
-        preds = self.bet(observations_history)
-        predicted_seq_action_bins_logits = preds["seq_action_bins_logits"]
-        selected_seq_action_residuals = preds["selected_seq_action_residuals"]
+        device  = self.bet.device
+        states  = batch["observation.state"].to(device)
+        actions = batch["action"].to(device)
 
-        # loss
-        ## bin losses
-        predicted_seq_action_bins_logits = predicted_seq_action_bins_logits.reshape((-1, predicted_seq_action_bins_logits.shape[-1]))
-        target_seq_action_bins = target_seq_action_bins.reshape((-1,1))
-        action_bins_loss = self.focal_loss(predicted_seq_action_bins_logits, target_seq_action_bins)
+        target_bins, target_residuals = self.bet.encoderDecoder.encode(actions)
+        target_bins      = target_bins.to(device)
+        target_residuals = target_residuals.to(device)
 
-        ## residual loss: sampled bin's residual vs GT residual
-        action_residual_loss = self.mse(selected_seq_action_residuals, target_seq_action_residuals)
-        
-        ## total loss
-        loss = action_bins_loss + action_residual_loss * self.residual_loss_scale
-        
-        return loss, action_bins_loss, action_residual_loss
+        obs   = self.observation_module(states)
+        preds = self.bet(obs)
+
+        logits    = preds["seq_action_bins_logits"].reshape(-1, preds["seq_action_bins_logits"].shape[-1])
+        bins_flat = target_bins.reshape(-1, 1)
+
+        bin_loss      = self.focal_loss(logits, bins_flat)
+        residual_loss = self.mse(preds["selected_seq_action_residuals"], target_residuals)
+        loss          = bin_loss + residual_loss * self.residual_loss_scale
+
+        return loss, bin_loss, residual_loss
     
     def get_optimizer(self, learning_rate, weight_decay, betas):
         optimizer = self.bet.create_optimizer(learning_rate, weight_decay, betas)

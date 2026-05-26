@@ -1,16 +1,16 @@
 device: cuda
 
 data:
+  zarr_path: "./pusht.zarr"
   batch_size: 256
   sequence_length: 5
   num_workers: 8
 
 observation:
-  observation_dim: 64 # 40 if using states else 32
-  embedding_dim: 128
-  use_states: True
-  fusion_type: "cross_attention"
-  encoder_type: "cnn" # "resnet" or "cnn"
+  state_dim: 5
+  observation_dim: 32   # output of StateObservation -> input to BeT
+  embedding_dim: 64     # BeT internal embedding
+  dropout: 0.1
 
 action:
   num_bins: 24
@@ -30,11 +30,11 @@ training:
   gamma: 1
   eval_interval: 1
   save_interval: 10
-  checkpoint_path: "./checkpoint_4_4_8_w5_cross"
+  checkpoint_path: "./checkpoint"
 
 evaluation:
-  save_video: True
-  video_dir: "./eval_videos_4_4_8_w5_cross"
+  save_video: true
+  video_dir: "./eval_videos_pusht"
   num_rollout: 100
-  max_episode_steps: 300
-  checkpoint_path: "./checkpoint_4_4_8_w5_cross/checkpoint_epoch15.pth"
+  max_episode_steps: 500
+  checkpoint_path: "./checkpoint/checkpoint_epoch10.pth"
