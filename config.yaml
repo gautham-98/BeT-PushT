@@ -1,8 +1,8 @@
-device: cuda
+device: cpu
 
 data:
-  zarr_path: "./pusht.zarr"
-  batch_size: 256
+  zarr_path: "./pusht/pusht_cchi_v7_replay.zarr"
+  batch_size: 2
   sequence_length: 5
   num_workers: 8
 
@@ -17,8 +17,8 @@ action:
   action_dim: 2
 
 bet_model:
-  num_transformer_layers: 4
-  num_attention_heads: 4
+  num_transformer_layers: 1
+  num_attention_heads: 1
   dropout: 0.1
 
 training:
