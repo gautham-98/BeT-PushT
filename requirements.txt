@@ -1,5 +1,6 @@
-lerobot[pusht]==0.3.3
+zarr==2.18.3
 scikit-learn==1.6.1
 gym_pusht==0.1.5
 wandb
 matplotlib
+pyyaml
