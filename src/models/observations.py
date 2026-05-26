@@ -71,15 +71,20 @@ def _build_cnn_early_fusion(dropout):
         nn.GELU(),
         nn.Conv2d(64, 128, kernel_size=3, stride=2, padding=1),    # 12x12
         nn.GELU(),
-        nn.Conv2d(128, 128, kernel_size=3, stride=2, padding=1),   # 6x6
+        nn.Conv2d(128, 64, kernel_size=3, stride=2, padding=1),    # 6x6
         nn.GELU(),
-        nn.AdaptiveAvgPool2d(1),
-        nn.Flatten(),
-        nn.Linear(128, 32),
+        nn.Conv2d(64, 32, kernel_size=3, stride=1, padding=1),     # 6x6
+        nn.GELU(),
+        nn.Conv2d(32, 8, kernel_size=3, stride=1, padding=1),      # 6x6
+        nn.GELU(),
+        nn.Flatten(), #288
+        nn.Dropout(dropout),
+        nn.Linear(288, 128),
         nn.GELU(),
         nn.Dropout(dropout),
+        nn.Linear(128, 64),
+        nn.GELU(),
     )
-
 
 class ImageStateObservation(nn.Module):
     """
