@@ -14,7 +14,10 @@ class StateObservation(nn.Module):
     def __init__(self, state_dim: int = 5, embed_dim: int = 32, dropout: float = 0.1):
         super().__init__()
         self.mlp = nn.Sequential(
-            nn.Linear(state_dim, 16),
+            nn.Linear(state_dim, 8),
+            nn.GELU(),
+            nn.Dropout(dropout),
+            nn.Linear(8, 16),
             nn.GELU(),
             nn.Dropout(dropout),
             nn.Linear(16, embed_dim),

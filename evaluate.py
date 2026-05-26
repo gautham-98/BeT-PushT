@@ -55,18 +55,19 @@ def load_checkpoint(ckpt_path: str, observation_module, bet, device: str):
     print(f"Loaded checkpoint: {ckpt_path}  (epoch {ckpt.get('epoch','?')}, val_loss {ckpt.get('val_loss', 0):.4f})")
 
 
-def save_video(frames: list, path: str, fps: int = 15):
+def save_video(frames: list, path: str, fps: int = 10):
     if not frames:
         return
+    path = str(path).rsplit(".", 1)[0] + ".avi"
     h, w = frames[0].shape[:2]
-    writer = cv2.VideoWriter(path, cv2.VideoWriter_fourcc(*"mp4v"), fps, (w, h))
+    writer = cv2.VideoWriter(path, cv2.VideoWriter_fourcc(*"MJPG"), fps, (w, h))
     for f in frames:
         writer.write(cv2.cvtColor(f, cv2.COLOR_RGB2BGR))
     writer.release()
 
 
 def _make_obs(info: dict, device: str) -> torch.Tensor:
-    """Build a (1, 5) normalised state tensor from env info."""
+    """Build a (1, 5) normalised state tensor from env step info."""
     state_raw = np.array([
         info["pos_agent"][0], info["pos_agent"][1],
         info["block_pose"][0], info["block_pose"][1],
@@ -74,6 +75,15 @@ def _make_obs(info: dict, device: str) -> torch.Tensor:
     ], dtype=np.float32)
     state_norm = normalise_state(state_raw[None])[0]   # (5,)
     return torch.from_numpy(state_norm).unsqueeze(0).to(device)  # (1, 5)
+
+
+def _obs_from_reset(obs_raw: np.ndarray, info: dict, device: str) -> torch.Tensor:
+    """Build a (1, 5) normalised state tensor from env.reset() output.
+    Prefers the direct observation (always present) over reconstructing from info."""
+    if obs_raw is not None and obs_raw.shape == (5,):
+        state_norm = normalise_state(obs_raw[None])[0]
+        return torch.from_numpy(state_norm).unsqueeze(0).to(device)
+    return _make_obs(info, device)
 
 
 def main():
@@ -108,14 +118,14 @@ def main():
     seq_len = data_conf["sequence_length"]
 
     gymnasium.register_envs(gym_pusht)
-    env = gymnasium.make("gym_pusht/PushT-v0", obs_type="state", render_mode="rgb_array")
+    env = gymnasium.make("gym_pusht/PushT-v0", obs_type="state", render_mode="rgb_array", max_episode_steps=max_steps)
 
     successes, coverages, rewards = [], [], []
 
     for ep in range(num_rollouts):
-        _, info = env.reset()
+        obs_raw, info = env.reset(seed=ep)
 
-        obs_buf = _make_obs(info, device)                          # (1, 5)
+        obs_buf = _obs_from_reset(obs_raw, info, device)           # (1, 5)
         window  = collections.deque([obs_buf] * seq_len, maxlen=seq_len)
 
         total_reward = 0.0

@@ -20,8 +20,8 @@ class Head(nn.Module):
         batch_size, sequence_length, num_bins = transformer_logits.shape
         # Transformer Logits: (Batch_Size , Sequence_Length , Number_Action_Bins)
 
-        x = self.layer(transformer_logits)
-        action_data = self.dropout(x)
+        action_data = self.layer(transformer_logits)
+        # action_data = self.dropout(x)
         # Action Data: (Batch_Size , Sequence_Length , Number_Action_Bins*(Action_dim+1))
 
         seq_action_bins_logits, all_seq_action_residuals = torch.split(action_data, [num_bins, num_bins * self.action_dim], dim=-1)
