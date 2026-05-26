@@ -5,6 +5,7 @@ __pycache__/
 
 # Virtual environment
 *.bet-env
+*.venv
 
 # Checkpoints
 checkpoints/
@@ -15,3 +16,7 @@ wandb/
 
 # System files
 .DS_Store
+
+.vscode/
+pusht/
+*.zip
