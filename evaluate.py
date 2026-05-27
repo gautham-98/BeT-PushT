@@ -129,6 +129,7 @@ def main():
         window  = collections.deque([obs_buf] * seq_len, maxlen=seq_len)
 
         total_reward = 0.0
+        max_coverage = 0.0
         coverage     = 0.0
         success      = False
         frames       = [] if do_video else None
@@ -147,8 +148,9 @@ def main():
 
             _, reward, terminated, truncated, info = env.step(action_raw)
             total_reward += reward
-            coverage = info.get("coverage", 0.0)
-            success  = bool(info.get("is_success", False))
+            coverage     = info.get("coverage", 0.0)
+            max_coverage = max(max_coverage, coverage)
+            success      = bool(info.get("is_success", False))
 
             window.append(_make_obs(info, device))
 
@@ -160,16 +162,16 @@ def main():
             save_video(frames, os.path.join(video_dir, f"rollout_{ep:04d}.mp4"))
 
         successes.append(int(success))
-        coverages.append(coverage)
+        coverages.append(max_coverage)
         rewards.append(total_reward)
-        print(f"  ep {ep+1:>4d}/{num_rollouts}  success={success}  coverage={coverage:.3f}  reward={total_reward:.2f}")
+        print(f"  ep {ep+1:>4d}/{num_rollouts}  success={success}  max_coverage={max_coverage:.3f}  reward={total_reward:.2f}")
 
     env.close()
 
     print("\n=== Evaluation Results ===")
-    print(f"  Success rate : {np.mean(successes)*100:.1f}%  ({sum(successes)}/{num_rollouts})")
-    print(f"  Mean coverage: {np.mean(coverages):.4f} ± {np.std(coverages):.4f}")
-    print(f"  Mean reward  : {np.mean(rewards):.2f} ± {np.std(rewards):.2f}")
+    print(f"  Success rate    : {np.mean(successes)*100:.1f}%  ({sum(successes)}/{num_rollouts})")
+    print(f"  Mean max coverage: {np.mean(coverages):.4f} ± {np.std(coverages):.4f}")
+    print(f"  Mean reward      : {np.mean(rewards):.2f} ± {np.std(rewards):.2f}")
 
 
 if __name__ == "__main__":
