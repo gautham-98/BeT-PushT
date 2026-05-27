@@ -21,8 +21,7 @@ class StateObservation(nn.Module):
             nn.GELU(),
             nn.Dropout(dropout),
             nn.Linear(16, embed_dim),
-            nn.GELU(),
         )
 
     def forward(self, states: torch.Tensor) -> torch.Tensor:
-        return self.mlp(states)
+        return states

@@ -6,7 +6,7 @@ import torch.nn as nn
 import wandb
 
 from src.models.bet import BeT
-from src.training.losses import FocalLoss
+from src.training.losses import FocalLoss, MultiTaskLoss
 
 class Trainer:
 
@@ -34,7 +34,7 @@ class Trainer:
             self.epochs = epochs
             self.optimizer = self.get_optimizer(learning_rate, weight_decay, betas)
             self.focal_loss = FocalLoss(gamma)
-            self.mse = nn.MSELoss()
+            self.multitask_loss = MultiTaskLoss()
             self.residual_loss_scale = residual_loss_scale
             
             self.eval_interval = eval_interval
@@ -127,9 +127,16 @@ class Trainer:
         logits    = preds["seq_action_bins_logits"].reshape(-1, preds["seq_action_bins_logits"].shape[-1])
         bins_flat = target_bins.reshape(-1, 1)
 
-        bin_loss      = self.focal_loss(logits, bins_flat)
-        residual_loss = self.mse(preds["selected_seq_action_residuals"], target_residuals)
-        loss          = bin_loss + residual_loss * self.residual_loss_scale
+        bin_loss = self.focal_loss(logits, bins_flat)
+
+        B, T, D = target_residuals.shape
+        K = preds["seq_action_residuals"].shape[2]
+        residual_loss = self.multitask_loss(
+            preds["seq_action_residuals"].reshape(B * T, K, D),
+            target_bins.reshape(B * T, 1),
+            target_residuals,
+        )
+        loss = bin_loss + residual_loss * self.residual_loss_scale
 
         return loss, bin_loss, residual_loss
     

@@ -4,7 +4,7 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 from sklearn.model_selection import train_test_split
 
-# positions in [0, 512] → [-1, 1];  angle in [-π, π] → [-1, 1]
+# positions in [0, 512] → [-1, 1];  angle in [0, 2π] → [-1, 1]
 _POS_SCALE   = 256.0
 _ANGLE_SCALE = np.pi
 
@@ -12,7 +12,7 @@ _ANGLE_SCALE = np.pi
 def normalise_state(state: np.ndarray) -> np.ndarray:
     out = state.copy().astype(np.float32)
     out[..., :4] = out[..., :4] / _POS_SCALE - 1.0
-    out[..., 4]  = out[..., 4]  / _ANGLE_SCALE
+    out[..., 4]  = out[..., 4]  / _ANGLE_SCALE - 1.0
     return out
 
 
@@ -37,24 +37,24 @@ class PushTStateDataset(Dataset):
         self.actions = actions
         self.h       = h
 
-        # (episode_start, timestep t) for every valid t in the dataset
+        # Only include timesteps where a full h-length history is available
+        # (skip the first h-1 steps of each episode to avoid padding)
         self.samples = []
         ep_start = 0
         for ep_end in episode_ends:
-            for t in range(ep_start, int(ep_end)):
-                self.samples.append((ep_start, t))
+            for t in range(ep_start + h - 1, int(ep_end)):
+                self.samples.append(t)
             ep_start = int(ep_end)
 
     def __len__(self):
         return len(self.samples)
 
     def __getitem__(self, idx):
-        ep_start, t = self.samples[idx]
-        # sequence [t-h+1 … t], clamped to episode start for padding
-        indices = [max(ep_start, t - self.h + 1 + i) for i in range(self.h)]
+        t = self.samples[idx]
+        start = t - self.h + 1
         return {
-            "observation.state": torch.from_numpy(self.states[indices]),   # (h, 5)
-            "action":            torch.from_numpy(self.actions[indices]),   # (h, 2)
+            "observation.state": torch.from_numpy(self.states[start:t + 1]),  # (h, 5)
+            "action":            torch.from_numpy(self.actions[start:t + 1]),  # (h, 2)
         }
 
 

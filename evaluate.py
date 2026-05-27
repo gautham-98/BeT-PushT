@@ -71,7 +71,7 @@ def _make_obs(info: dict, device: str) -> torch.Tensor:
     state_raw = np.array([
         info["pos_agent"][0], info["pos_agent"][1],
         info["block_pose"][0], info["block_pose"][1],
-        info["block_pose"][2],
+        info["block_pose"][2] % (2 * np.pi),   # wrap to [0, 2π] — matches zarr training data
     ], dtype=np.float32)
     state_norm = normalise_state(state_raw[None])[0]   # (5,)
     return torch.from_numpy(state_norm).unsqueeze(0).to(device)  # (1, 5)
