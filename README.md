@@ -1,58 +1,103 @@
 # BeT-PushT
+
 ## Contents
 - [Introduction](#introduction)
-- [Design Choices and Challenges](#design-choices-and-challenges)
+- [Architecture](#architecture)
+- [Quickstart](#quickstart)
+- [Configuration](#configuration)
+- [Design Choices](#design-choices)
+
+## Results
+
+<div align="center">
+  <img src="figures/rollout_0049.gif" alt="BeT rollout" width="300"/>
+  <img src="figures/rollout_0087.gif" alt="BeT rollout" width="300"/>
+  <img src="figures/rollout_0051.gif" alt="BeT rollout" width="300"/>
+  <img src="figures/rollout_0032.gif" alt="BeT rollout" width="300"/>
+</div>
 
 ## Introduction
 
-This repository contains an implementation of **Behavioural Transformer (BeT)** for the **PushT dataset**, where a robot learns to push a T-shaped object into a T-shaped target region. The figure illustrates the task using a diffusion policy.
+This repository implements **Behaviour Transformer (BeT)** ([Shafiullah et al., 2022](https://arxiv.org/abs/2206.11251)) for the **PushT** robotic manipulation task, where an agent learns to push a T-shaped block into a target region from human demonstrations.
+
+The agent observes only the **5D state**: agent position (x, y), block position (x, y), and block angle: and predicts a 2D target position for the agent at each step. The model is trained on the `pusht_cchi_v7_replay.zarr` dataset (~206 episodes, ~25k timesteps) using imitation learning.
+
+## Architecture
 
 <div align="center">
-  <img src="figures/pusht_diffusion.gif" alt="BeT-PushT Dataset" width="200"/>
+  <img src="figures/BeT_architecture.png" alt="BeT architecture" width="800"/>
 </div>
 
-The **PushT dataset** consists of episodes with two types of observations: image observations of the scene and the positional state of the robot. The task is to predict actions that move the robot to successfully push the T-shaped object into the T-shaped target region.
+BeT treats action prediction as a **sequence modelling problem** over discretised actions:
 
-The approach combines visual and positional information in a sequence-aware manner. Image observations are passed through a **ResNet** to extract visual features, while the robot positional states are processed with a separate **MLP**. The image and state features are then concatenated and provided as input to the **Behavioural Transformer (BeT)**. The transformer outputs the **robot target position** for the next step. This architecture allows the model to leverage both the visual context and robot state information when deciding actions.
+1. **Action discretisation**: K-means clusters the training actions into `num_bins` centroids. Each action is represented as a bin index + residual offset from the centroid.
+
+<div align="center">
+  <img src="figures/kmeans_action_clusters.png" alt="K-means action clusters" width="500"/>
+</div>
+
+2. **GPT backbone**: A causal transformer takes a window of `sequence_length` normalised states and produces per-timestep embeddings.
+
+3. **Action head**: A linear layer maps each embedding to bin logits and per-bin residual predictions.
+
+4. **Loss**: Focal loss for bin classification + MSE on the residual at the ground-truth bin (via `MultiTaskLoss`).
+
+At inference, a bin is sampled from the predicted distribution (multinomial, not argmax) to preserve multimodality, and the corresponding residual prediction is added to the centroid to recover the continuous action.
 
 ## Quickstart
-
-The repository can be cloned and run as follows:
 
 ```bash
 git clone https://github.com/gautham-98/BeT-PushT.git
 cd BeT-PushT
-pip install -r requirements.txt 
+pip install -r requirements.txt
 ```
 
-Optionally, WandB can be used for experiment logging:
+Optionally enable WandB logging:
 
 ```bash
 wandb login
 ```
 
-Training is started with:
+**Train:**
 
 ```bash
-python train.py --config "config.yaml"
+python train.py --config config.yaml
 ```
 
-Evaluation is run with:
+**Evaluate:**
 
 ```bash
-python evaluate.py --config "config.yaml"
+python evaluate.py --config config.yaml
 ```
-For experiments I have relied on Google Colab for GPUs and the `requirements.txt` have the requirements for a T4 GPU instance in google Colab. The `main.ipynb` notebook can be used to run the scripts in Colab. The parameters for training and evaluation, including the neural network hyperparameters can be configured from `config.yaml`.
 
-## Design Choices and Challenges
+The `requirements.txt` targets a Colab T4 GPU environment.
 
-<div align="center">
-  <img src="figures/BeT_architecture.png" alt="BeT-PushT Dataset" width="800"/>
-</div>
+## Configuration
 
-The main design choice was **multi-modal processing**: using ResNet for images, MLP for robot states, and combining them before passing into the Behaviour Transformer. The robot MLP upscales the 2 dimensional state to 16 dimensional tensor, the MLP after Resnet downscale the 512-dimensional feature embedding from ResNet as a 64-dimensional tensor. These are then concatenated to create a 80 dimensional observation tensor which is then passed to the BeT model. The action output is the target robot position. This is implemented in the class `ImageStateObservation` in `BeT-PushT/src/models/observations.py`. The class can also be configured to just use the observation image and avoid using the robot position. 
+All hyperparameters are set in `config.yaml`:
 
+| Section | Key | Description |
+|---|---|---|
+| `data` | `zarr_path` | Path to the PushT zarr dataset |
+| `data` | `sequence_length` | Observation history window length |
+| `data` | `batch_size` | Training batch size |
+| `action` | `num_bins` | Number of K-means action clusters |
+| `observation` | `embedding_dim` | Transformer internal embedding size |
+| `bet_model` | `num_transformer_layers` | Number of GPT transformer layers |
+| `bet_model` | `num_attention_heads` | Number of attention heads |
+| `training` | `gamma` | Focal loss gamma (0 = plain cross-entropy) |
+| `training` | `residual_loss_scale` | Weight on the residual MSE loss |
+| `evaluation` | `num_rollout` | Number of evaluation episodes |
+| `evaluation` | `max_episode_steps` | Max steps per rollout |
 
+## Design Choices
 
+**State-only observations.** The 5D state (agent xy, block xy, block angle) is directly projected into the transformer embedding space via a learned linear layer. No image encoder is used on this branch: see the `image-state` branch for the ResNet + MLP fusion variant.
 
+**Action normalisation.** Positions are mapped from `[0, 512]` to `[-1, 1]`. The block angle from the environment is in `[0, 2π]` (pymunk accumulates angles; `get_obs()` wraps them with `% 2π`), normalised to `[-1, 1]` by dividing by π and subtracting 1. Evaluation observations use the same wrapping to stay in-distribution.
 
+**Dataset construction.** Only timesteps with a complete `sequence_length` history are used: no padding at episode boundaries. This ensures every training sequence contains fully valid observations.
+
+**Residual loss.** The MSE for residual prediction is computed at the **ground-truth bin** position (not the stochastically sampled bin), following the original paper. This is implemented via `MultiTaskLoss` in `src/training/losses.py`.
+
+**Evaluation metric.** The primary metric is **mean max coverage**: the peak T-block coverage achieved at any point during each rollout, averaged across episodes: rather than final-step coverage.
