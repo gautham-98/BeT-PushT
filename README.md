@@ -92,7 +92,7 @@ All hyperparameters are set in `config.yaml`:
 
 ## Design Choices
 
-**State-only observations.** The 5D state (agent xy, block xy, block angle) is directly projected into the transformer embedding space via a learned linear layer. No image encoder is used on this branch: see the `image-state` branch for the ResNet + MLP fusion variant.
+**State-only observations.** The 5D state (agent xy, block xy, block angle) is directly projected into the transformer embedding space via a learned linear layer. 
 
 **Action normalisation.** Positions are mapped from `[0, 512]` to `[-1, 1]`. The block angle from the environment is in `[0, 2π]` (pymunk accumulates angles; `get_obs()` wraps them with `% 2π`), normalised to `[-1, 1]` by dividing by π and subtracting 1. Evaluation observations use the same wrapping to stay in-distribution.
 
